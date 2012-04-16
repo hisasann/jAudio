@@ -1,0 +1,211 @@
+<!DOCTYPE HTML>
+<html lang="ru-RU">
+<head>
+	<meta charset="UTF-8">
+	<title>jAudio - HTML5 audio DEMO</title>
+	<style type="text/css" media="screen">
+		* {
+			margin: 0px;
+			padding: 0px;
+		}
+
+		body {
+			overflow: hidden;
+		}
+
+		.radial1 {
+			background: -moz-radial-gradient(red, yellow, #1E90FF);
+			background: -moz-radial-gradient(#FF0000 5%, #FFFF00 30%, #333333 50%);
+			background: -webkit-gradient(linear, left top, left bottom, from(#66ff00), color-stop(0.3, #ffff00), color-stop(0.7, #ff00ff), to(#00aaff));
+		}
+
+		.radial2 {
+			background: -moz-radial-gradient(red, yellow, #1E90FF);
+			background: -moz-radial-gradient(#FF3535 6%, #F5FF35 30%, #333333 50%);
+			background: -webkit-gradient(linear, left top, left bottom, from(#66ff00), color-stop(0.3, #ffff00), color-stop(0.7, #ff00ff), to(#00aaff));
+		}
+		
+		#thanks {
+			position: absolute;
+			left: 10px;
+			bottom: 10px;
+			color: white;
+		}
+		
+		#footer {
+			position: absolute;
+			right: 10px;
+			bottom: 10px;
+			color: red;
+			text-shadow: 0.2em 0.2em 0.2em #888;
+		}
+		#footer a {
+			color: red;
+			text-shadow: 0.2em 0.2em 0.2em #777777;
+		}
+	</style>
+	<script src="jquery.js" type="text/javascript" charset="utf-8"></script>
+	<script src="easing.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript" src="jAudio.js"></script>
+	<script src="jsdeferred.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript" charset="utf-8">
+	$(function() {
+		Deferred.define();
+
+		var wrap = $("#wrap"),
+			winHeight = $(window).height(),
+			winWidth = $(window).width(),
+			centerTop = $(window).height() / 2,
+			centerLeft = $(window).width() / 2,
+			RADIUS = 120,
+			ELEMENT_COUNT = 50;
+
+		wrap
+			.css({
+				height: winHeight,
+				width: winWidth
+			});
+
+		for (var i=0; i<ELEMENT_COUNT; i++) (function() {
+			// create element
+			var elem = makeElement();
+			var current = elem;
+			
+			(function () {
+				var callee = arguments.callee;
+				
+				wait(Math.random() * 2000 / 1000).
+				next(function() {
+					current
+						.css({
+							opacity: 1,
+							top: Math.random() * winHeight,
+							left: Math.random() * winWidth,
+							width: RADIUS * 2,
+							height: RADIUS * 2
+						});
+				}).
+				next(function() {
+					// animation
+					return (function() {
+						var d = new Deferred();
+						current
+							.animate({
+								top: centerTop,
+								left: centerLeft,
+								height: 0,
+								width: 0,
+								opacity: 0.2
+							},{
+								duration: 3000,
+								specialEasing: {
+									height: 'easeOutBack',
+									width: 'easeOutBack'
+								},
+								complete: function() {
+									d.call();
+								}
+							});
+				
+						return d;
+					})();
+				}).
+				next(function() {
+					callee();
+				});
+
+			})();
+		})();
+		
+		function makeElement() {
+			var elem = $("<canvas>", {
+				css: {
+					position: "absolute",
+					opacity: 0
+				}
+			})
+			.attr({
+				width: RADIUS * 2,
+				height: RADIUS * 2
+			})
+			.appendTo("#wrap");
+
+			var context;
+			context = elem[0].getContext('2d');
+			context.beginPath();
+			context.fillStyle = ["rgb(", getRGB(), ",", getRGB(), ",", getRGB(), ")"].join("");
+			context.arc( RADIUS, RADIUS, RADIUS, 0, Math.PI * 2, false);
+			context.fill();
+			
+			return elem;
+		}
+		
+		function getColor() {
+			return Math.floor(Math.random() * 0xFFFFFF).toString(16);
+		}
+
+		function getRGB() {
+			return Math.floor(Math.random() * 255);
+		}
+		
+		function planet() {
+			wait(3.5).
+			next(function() {
+				wrap
+					.removeClass("radial1")
+					.addClass("radial2");
+			}).
+			wait(3.5).
+			next(function() {
+				wrap
+					.removeClass("radial2")
+					.addClass("radial1");
+			}).
+			wait(0.1).
+			next(function() {
+				planet();
+			});
+		}
+		planet();
+		
+		$.jAudio($("#audio"))
+			.loop(true)
+			.autobuffer(true)
+			.muted(false)
+			.volume(0.8)
+			.canplay(function() {
+				this.play();
+			})
+			.playing(function() {
+				var _this = this;
+		
+				if(this.isPaused() || this.isEnded())
+					return;
+		
+				// 何かしらの処理
+		
+				setTimeout( function(){
+					// 始めに戻る
+					// _this.currentTime(0);
+				}, 10000);
+			});
+	});
+	</script>
+</head>
+<body>
+
+	<div id="wrap" class="radial1"></div>
+	<audio id="audio" src="Spangle_call_Lilli_line_dreamer.ogg">  
+		Your browser does not support the <code>audio</code> element.  
+	</audio>
+
+	<div id="thanks">
+		Sound is 「Spangle call Lilli line - dreamer」
+	</div>
+
+	<div id="footer">
+		created by <a href="http://hisasann.com/" target="_blank">hisasann</a>
+	</div>
+
+</body>
+</html>
